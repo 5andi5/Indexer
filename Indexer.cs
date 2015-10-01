@@ -12,11 +12,13 @@ namespace CdrIndexer
     {
         private IEnumerable<FileInfo> files;
         private Action onFileIndexed;
+        private Func<bool> cancellationRequested;
 
-        public Indexer(IEnumerable<FileInfo> files, Action onFileIndexed)
+        public Indexer(IEnumerable<FileInfo> files, Action onFileIndexed, Func<bool> cancellationRequested)
         {
             this.files = files;
             this.onFileIndexed = onFileIndexed;
+            this.cancellationRequested = cancellationRequested;
         }
 
         public void Run()
@@ -25,6 +27,11 @@ namespace CdrIndexer
             {
                 foreach (FileInfo file in files)
                 {
+                    if (this.cancellationRequested())
+                    {
+                        return;
+                    }
+
                     string path = file.FullName;
                     string hash = CalculateHash(path);
                     Entry entry = LuceneStore.Current.Find(path);
@@ -38,14 +45,12 @@ namespace CdrIndexer
                             ModifiedOn = file.LastWriteTime,
                         };
                     }
-                    else if (entry.Hash == hash)
+                    else if (entry.Hash != hash)
                     {
-                        continue;
+                        entry.Text = cdrReader.ReadText(path);
+                        entry.CalculateAll();
+                        LuceneStore.Current.Save(entry);
                     }
-
-                    entry.Text = cdrReader.ReadText(path);
-                    entry.CalculateAll();
-                    LuceneStore.Current.Save(entry);
                     this.onFileIndexed();
                 }
             }

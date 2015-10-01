@@ -26,6 +26,7 @@ namespace CdrIndexer
                 ExtractText(page.Shapes.All());
             }
             (corelDraw.ActiveDocument as CD.IDrawDocument).Close();
+            CleanedUpText();
             return this.text.ToString();
         }
 
@@ -41,6 +42,15 @@ namespace CdrIndexer
                 {
                     ExtractText(shape.Shapes.All());
                 }
+            }
+        }
+
+        private void CleanedUpText()
+        {
+            this.text.Replace("\t", " ");
+            while (this.text.ToString().IndexOf("  ") > 0)
+            {
+                this.text = this.text.Replace("  ", " ");
             }
         }
 

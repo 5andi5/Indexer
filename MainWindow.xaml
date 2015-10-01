@@ -4,26 +4,38 @@
         Title="MainWindow" Height="437" Width="685" Closing="Window_Closing">
     <Grid>
         <TabControl VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch">
-            <TabItem Header="Index">
-                <Grid Background="#FFE5E5E5">
-                    <Button x:Name="uxIndex" Content="Index" HorizontalAlignment="Right" Margin="0,56,10,0" VerticalAlignment="Top" Width="75" Click="uxIndex_Click"/>
-                    <TextBox x:Name="uxPathToIndex" Height="23" Margin="10,11,10,0" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalContentAlignment="Stretch"/>
-                    <TextBlock x:Name="uxOutput" Margin="10,86,10,5" TextWrapping="Wrap" Text=""/>
-                    <ProgressBar x:Name="uxIndexProgress" Height="10" Margin="10,39,10,0" VerticalAlignment="Top" HorizontalContentAlignment="Stretch"/>
-                </Grid>
-            </TabItem>
             <TabItem Header="Search">
                 <Grid Background="#FFE5E5E5">
                     <Button x:Name="uxSearch" Content="Search" HorizontalAlignment="Right" Margin="0,38,10,0" VerticalAlignment="Top" Width="75" Click="uxSearch_Click"/>
                     <TextBox x:Name="uxSearchPhrase" Height="23" Margin="10,10,10,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" HorizontalContentAlignment="Stretch"/>
                     <DataGrid x:Name="uxResults" Margin="10,66,10,10" AutoGenerateColumns="False">
                         <DataGrid.Columns>
+                            <DataGridTextColumn Binding="{Binding Score}" Header="Score" IsReadOnly="True"/>
                             <DataGridTextColumn Binding="{Binding Name}" Header="Name" IsReadOnly="True"/>
-                            <DataGridTextColumn Binding="{Binding Text}" Header="Text" IsReadOnly="True"/>
-                            <DataGridTextColumn Binding="{Binding ModifiedOn}" Header="Modified on" IsReadOnly="True"/>
+                            <DataGridTextColumn Binding="{Binding ModifiedOnText}" Header="Modified on" IsReadOnly="True"/>
+                            <DataGridTextColumn Binding="{Binding TextPreview}" Header="Text" IsReadOnly="True"/>
                             <DataGridTextColumn Binding="{Binding Path}" Header="Path" IsReadOnly="True"/>
+                            <DataGridTextColumn Binding="{Binding Hash}" Header="Hash" IsReadOnly="True"/>
                         </DataGrid.Columns>
+                        <DataGrid.Resources>
+                            <Style TargetType="DataGridRow">
+                                <EventSetter Event="MouseDoubleClick" Handler="uxResults_RowDoubleClick"/>
+                                <Setter Property="ToolTip">
+                                    <Setter.Value>
+                                        <TextBlock Text="{Binding Text}" />
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </DataGrid.Resources>
                     </DataGrid>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Index">
+                <Grid Background="#FFE5E5E5">
+                    <Button x:Name="uxIndex" Content="Index" HorizontalAlignment="Right" Margin="0,56,10,0" VerticalAlignment="Top" Width="75" Click="uxIndex_Click"/>
+                    <TextBox x:Name="uxPathToIndex" Height="23" Margin="10,11,10,0" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalContentAlignment="Stretch"/>
+                    <TextBlock x:Name="uxOutput" Margin="10,86,10,5" TextWrapping="Wrap" Text=""/>
+                    <ProgressBar x:Name="uxIndexProgress" Height="10" Margin="10,39,10,0" VerticalAlignment="Top" HorizontalContentAlignment="Stretch"/>
                 </Grid>
             </TabItem>
         </TabControl>

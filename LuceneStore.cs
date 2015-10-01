@@ -69,7 +69,7 @@ namespace CdrIndexer
         {
             var parser = new QueryParser(Version, "All", this.analyzer);
             Query query = parser.Parse(phrase);
-            TopDocs result = this.searcher.Search(query, n: 10);
+            TopDocs result = this.searcher.Search(query, n: 1000);
             return ToEntries(result);
         }
 
@@ -78,7 +78,7 @@ namespace CdrIndexer
             var entries = new List<Entry>(docs.ScoreDocs.Count());
             foreach (var doc in docs.ScoreDocs)
             {
-                entries.Add(new Entry(this.searcher.Doc(doc.Doc)));
+                entries.Add(new Entry(this.searcher.Doc(doc.Doc), doc.Score));
             }
             return entries;
         }

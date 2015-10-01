@@ -10,19 +10,46 @@ namespace CdrIndexer
 {
     class Entry
     {
+        private static readonly int PreviewMaxLength = 100;
+
         public string Hash { get; set; }
         public string Path { get; set; }
         public string Name { get; set; }
         public string Text { get; set; }
         public string All { get; set; }
         public DateTime ModifiedOn { get; set; }
-        //public float Score { get; set; }
+        public int Score { get; set; }
+
+        public string TextPreview
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(this.Text))
+                {
+                    return "";
+                }
+                string text = this.Text;
+                if (text.Length > PreviewMaxLength)
+                {
+                    text = text.Substring(0, PreviewMaxLength - 3) + "...";
+                }
+                return text.Replace("\r", "").Replace("\n", "");
+            }
+        }
+
+        public string ModifiedOnText
+        {
+            get
+            {
+                return this.ModifiedOn.ToString("yyyy.MM.dd HH:mm");
+            }
+        }
 
         public Entry()
         {
         }
 
-        public Entry(Document doc)
+        public Entry(Document doc, float score)
         {
             this.Hash = doc.Get("Hash");
             this.Path = doc.Get("Path");
@@ -30,6 +57,7 @@ namespace CdrIndexer
             this.Text = doc.Get("Text");
             this.All = doc.Get("All");
             this.ModifiedOn = DateTime.Parse(doc.Get("ModifiedOn"));
+            this.Score = Convert.ToInt32(score * 1000);
         }
 
         public Document ToDocument()
