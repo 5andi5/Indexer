@@ -41,8 +41,8 @@ namespace CdrIndexer
             string indexPath = Path.Combine(
                 Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
                 "LuceneIndex");
-            this.luceneIndexDirectory = FSDirectory.Open(indexPath);//.GetDirectory(indexPath);
-            this.analyzer = new StandardAnalyzer(Version); // new WhitespaceAnalyzer();
+            this.luceneIndexDirectory = FSDirectory.Open(indexPath);
+            this.analyzer = new StandardAnalyzer(Version);
             this.writer = new IndexWriter(
                 luceneIndexDirectory,
                 this.analyzer,
@@ -53,7 +53,6 @@ namespace CdrIndexer
 
         public Entry Find(string path)
         {
-            //var filter = new QueryWrapperFilter(new TermQuery( new Term("Path", path)));
             var query = new TermQuery(new Term("Path", path));
             TopDocs docs = this.searcher.Search(query, n: 1);
             return ToEntries(docs).FirstOrDefault();
@@ -76,9 +75,10 @@ namespace CdrIndexer
         private List<Entry> ToEntries(TopDocs docs)
         {
             var entries = new List<Entry>(docs.ScoreDocs.Count());
+            int index = 1;
             foreach (var doc in docs.ScoreDocs)
             {
-                entries.Add(new Entry(this.searcher.Doc(doc.Doc), doc.Score));
+                entries.Add(new Entry(this.searcher.Doc(doc.Doc), doc.Score, index++));
             }
             return entries;
         }

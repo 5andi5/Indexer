@@ -18,7 +18,8 @@ namespace CdrIndexer
         public string Text { get; set; }
         public string All { get; set; }
         public DateTime ModifiedOn { get; set; }
-        public int Score { get; set; }
+        public float Score { get; set; }
+        public int PositionByScore { get; set; }
 
         public string TextPreview
         {
@@ -49,7 +50,7 @@ namespace CdrIndexer
         {
         }
 
-        public Entry(Document doc, float score)
+        public Entry(Document doc, float score, int positionByScore)
         {
             this.Hash = doc.Get("Hash");
             this.Path = doc.Get("Path");
@@ -57,7 +58,8 @@ namespace CdrIndexer
             this.Text = doc.Get("Text");
             this.All = doc.Get("All");
             this.ModifiedOn = DateTime.Parse(doc.Get("ModifiedOn"));
-            this.Score = Convert.ToInt32(score * 1000);
+            this.Score = score;
+            this.PositionByScore = positionByScore;
         }
 
         public Document ToDocument()
@@ -100,7 +102,7 @@ namespace CdrIndexer
             all.AppendLine(Normalize(whitespacePath));
             all.AppendLine(SimpleNormalize(whitespacePath));
             all.AppendLine(this.Text);
-            this.All = all.ToString();//.ToLower();
+            this.All = all.ToString();
         }
 
         private string Normalize(string value)
