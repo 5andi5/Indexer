@@ -5,13 +5,10 @@ using Lucene.Net.Index;
 using Lucene.Net.QueryParsers;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CdrIndexer
 {
@@ -53,7 +50,7 @@ namespace CdrIndexer
 
         public Entry Find(string path)
         {
-            var query = new TermQuery(new Term("Path", path.ToLower()));
+            var query = new TermQuery(FindTerm(path));
             TopDocs docs = this.searcher.Search(query, n: 1);
             return ToEntries(docs).FirstOrDefault();
         }
@@ -66,8 +63,7 @@ namespace CdrIndexer
 
         public void Update(Entry entry)
         {
-            var finder = new Term("Path", entry.Path);
-            this.writer.UpdateDocument(finder, entry.ToDocument());
+            this.writer.UpdateDocument(FindTerm(entry.Path), entry.ToDocument());
             this.writer.Flush(triggerMerge: false, flushDocStores: true, flushDeletes: true);
         }
 
@@ -75,6 +71,35 @@ namespace CdrIndexer
         {
             this.Close();
             LuceneStore.current = new LuceneStore();
+        }
+
+        public int TotalCount()
+        {
+            int count;
+            using (IndexReader reader = IndexReader.Open(this.luceneIndexDirectory, readOnly: true))
+            {
+                count = reader.NumDocs();
+            }
+            return count;
+        }
+
+        public List<string> AllPaths()
+        {
+            var paths = new List<string>();
+            using (IndexReader reader = IndexReader.Open(this.luceneIndexDirectory, readOnly: true))
+            {
+                for (int index = 0; index < reader.MaxDoc; index++)
+                {
+                    if (reader.IsDeleted(index))
+                    {
+                        continue;
+                    }
+
+                    Document doc = reader.Document(index);
+                    paths.Add(doc.Get("Path"));
+                }
+            }
+            return paths;
         }
 
         public List<Entry> Search(string phrase)
@@ -96,9 +121,15 @@ namespace CdrIndexer
             return entries;
         }
 
-        public void DeleteAll()
+        public void Delete(string path)
         {
-            this.writer.DeleteAll();
+            this.writer.DeleteDocuments(FindTerm(path));
+            this.writer.Flush(triggerMerge: false, flushDocStores: true, flushDeletes: true);
+        }
+
+        private Term FindTerm(string path)
+        {
+            return new Term("Path", path.ToLower());
         }
 
         public void Close()

@@ -70,6 +70,7 @@
     </Compile>
     <Compile Include="Entry.cs" />
     <Compile Include="CdrReader.cs" />
+    <Compile Include="IndexCleaner.cs" />
     <Compile Include="LuceneStore.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>

@@ -23,6 +23,7 @@ namespace CdrIndexer
     public partial class MainWindow : Window
     {
         private BackgroundWorker indexingWorker;
+        private BackgroundWorker cleanupWorker;
 
         public MainWindow()
         {
@@ -68,6 +69,7 @@ namespace CdrIndexer
             }
 
             Disable();
+            uxIndex.IsEnabled = true;
             uxIndex.Content = "Stop";
 
             Log("Counting files...\r\n");
@@ -89,7 +91,6 @@ namespace CdrIndexer
         {
             this.indexingWorker = null;
             uxIndex.Content = "Index";
-            uxIndex.IsEnabled = true;
             uxIndexProgress.Value = 0;
             Enable();
         }
@@ -112,7 +113,7 @@ namespace CdrIndexer
 
         private Control[] ControlsToDisable()
         {
-            return new Control[] { uxPathToIndex, uxSearchPhrase, uxSearch, uxResults };
+            return new Control[] { uxPathToIndex, uxIndex, uxCleanupIndex, uxSearchPhrase, uxSearch, uxResults };
         }
 
         private void IndexFiles(object sender, DoWorkEventArgs e)
@@ -136,6 +137,62 @@ namespace CdrIndexer
             uxIndexProgress.Value++;
         }
 
+        private void uxCleanupIndex_Click(object sender, RoutedEventArgs e)
+        {
+            if (this.cleanupWorker == null)
+            {
+                StartCleanup();
+            }
+            else
+            {
+                RequestStopCleanup();
+            }
+        }
+
+        private void RequestStopCleanup()
+        {
+            this.cleanupWorker.CancelAsync();
+            uxCleanupIndex.IsEnabled = false;
+        }
+
+        private void StartCleanup()
+        {
+            uxOutput.Text = "";
+
+            Disable();
+            uxCleanupIndex.IsEnabled = true;
+            uxCleanupIndex.Content = "Stop";
+
+            int totalCount = LuceneStore.Current.TotalCount();
+            Log(string.Format("{0} entries to process.\r\n", totalCount));
+            uxIndexProgress.Value = 0;
+            uxIndexProgress.Maximum = totalCount;
+            this.cleanupWorker = new BackgroundWorker();
+            this.cleanupWorker.DoWork += CleanUpIndex;
+            this.cleanupWorker.WorkerReportsProgress = true;
+            this.cleanupWorker.ProgressChanged += OnProgressChanged;
+            this.cleanupWorker.WorkerSupportsCancellation = true;
+            this.cleanupWorker.RunWorkerCompleted += OnCleanupCompleted;
+            this.cleanupWorker.RunWorkerAsync();
+        }
+
+        private void CleanUpIndex(object sender, DoWorkEventArgs e)
+        {
+            var worker = sender as BackgroundWorker;
+            new IndexCleaner(
+                () => { (worker).ReportProgress(0); },
+                () => { return worker.CancellationPending; },
+                (message) => { Dispatcher.Invoke(() => Log(message)); }
+            ).Run();
+        }
+
+        private void OnCleanupCompleted(object cs, RunWorkerCompletedEventArgs ce)
+        {
+            this.cleanupWorker = null;
+            uxCleanupIndex.Content = "Clean up index";
+            uxIndexProgress.Value = 0;
+            Enable();
+        }
 
         private void uxSearchPhrase_KeyUp(object sender, KeyEventArgs e)
         {

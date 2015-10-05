@@ -38,6 +38,7 @@
                     <TextBlock x:Name="uxOutput" Margin="10,86,10,5" TextWrapping="Wrap" Text="" Background="#FFF0F0F0"/>
                     <ProgressBar x:Name="uxIndexProgress" Height="10" Margin="10,39,10,0" VerticalAlignment="Top" HorizontalContentAlignment="Stretch"/>
                     <Button x:Name="uxBrowsePathToIndex" Content="..." HorizontalAlignment="Right" Margin="0,10,10,0" VerticalAlignment="Top" Width="27" Height="24" Click="uxBrowsePathToIndex_Click"/>
+                    <Button x:Name="uxCleanupIndex" Content="Clean up index" HorizontalAlignment="Left" Margin="10,56,0,0" VerticalAlignment="Top" Width="103" Click="uxCleanupIndex_Click"/>
                 </Grid>
             </TabItem>
         </TabControl>
