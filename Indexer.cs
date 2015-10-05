@@ -34,13 +34,13 @@ namespace CdrIndexer
             this.log("Loading CorelDraw...\r\n");
             using (var cdrReader = new CdrReader())
             {
-                this.log("Indexing...\r\n. - file not changed\r\n* - updating file info\r\n+ - new file\r\n");
+                this.log("Indexing...\r\n. - file not changed\r\n* - file changed (updating)\r\n+ - new file\r\n");
                 foreach (FileInfo file in files)
                 {
                     if (this.cancellationRequested())
                     {
                         this.log("\r\nTerminating\r\n");
-                        return;
+                        break;
                     }
 
                     string path = file.FullName;
@@ -52,18 +52,21 @@ namespace CdrIndexer
                         newCount++;
                         entry = new Entry
                         {
-                            Path = file.FullName,
+                            Path = file.FullName.ToLower(),
                             Name = file.Name,
                             Hash = hash,
                             ModifiedOn = file.LastWriteTime,
                         };
-                        ReadAndSaveText(path, entry, cdrReader);
+                        ReadText(path, entry, cdrReader);
+                        LuceneStore.Current.Insert(entry);
                     }
                     else if (entry.Hash != hash)
                     {
                         this.log("*");
                         updatedCount++;
-                        ReadAndSaveText(path, entry, cdrReader);
+                        entry.Hash = hash;
+                        ReadText(path, entry, cdrReader);
+                        LuceneStore.Current.Update(entry);
                     }
                     else
                     {
@@ -73,16 +76,16 @@ namespace CdrIndexer
                     this.onFileIndexed();
                 }
             }
+            LuceneStore.Current.ReopenDirectory();
             this.log(string.Format(
                 "\r\nFinished: {0} not changed, {1} updated, {2} new.\r\n",
                 unchangedCount, updatedCount, newCount));
         }
 
-        private void ReadAndSaveText(string path, Entry entry, CdrReader cdrReader)
+        private void ReadText(string path, Entry entry, CdrReader cdrReader)
         {
             entry.Text = cdrReader.ReadText(path);
             entry.CalculateAll();
-            LuceneStore.Current.Save(entry);
         }
 
         private string CalculateHash(string path)

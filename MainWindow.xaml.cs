@@ -16,6 +16,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using F = System.Windows.Forms;
 
 namespace CdrIndexer
 {
@@ -198,6 +199,15 @@ namespace CdrIndexer
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             LuceneStore.Current.Close();
+        }
+
+        private void uxBrowsePathToIndex_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new F.FolderBrowserDialog();
+            if (dialog.ShowDialog() == F.DialogResult.OK)
+            {
+                uxPathToIndex.Text = dialog.SelectedPath;
+            }
         }
     }
 }

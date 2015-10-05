@@ -53,15 +53,28 @@ namespace CdrIndexer
 
         public Entry Find(string path)
         {
-            var query = new TermQuery(new Term("Path", path));
+            var query = new TermQuery(new Term("Path", path.ToLower()));
             TopDocs docs = this.searcher.Search(query, n: 1);
             return ToEntries(docs).FirstOrDefault();
         }
 
-        public void Save(Entry entry)
+        public void Insert(Entry entry)
         {
             this.writer.AddDocument(entry.ToDocument());
-            this.writer.Flush(triggerMerge: true, flushDocStores: true, flushDeletes: false);
+            this.writer.Flush(triggerMerge: false, flushDocStores: true, flushDeletes: true);
+        }
+
+        public void Update(Entry entry)
+        {
+            var finder = new Term("Path", entry.Path);
+            this.writer.UpdateDocument(finder, entry.ToDocument());
+            this.writer.Flush(triggerMerge: false, flushDocStores: true, flushDeletes: true);
+        }
+
+        public void ReopenDirectory()
+        {
+            this.Close();
+            LuceneStore.current = new LuceneStore();
         }
 
         public List<Entry> Search(string phrase)
@@ -91,6 +104,7 @@ namespace CdrIndexer
         public void Close()
         {
             this.analyzer.Close();
+            this.searcher.Dispose();
             this.writer.Dispose();
             this.luceneIndexDirectory.Dispose();
         }
