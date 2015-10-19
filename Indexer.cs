@@ -8,6 +8,8 @@ namespace CdrIndexer
 {
     public class Indexer
     {
+        private static readonly int MaxErrors = 10;
+
         private IEnumerable<FileInfo> files;
         private Action onFileIndexed;
         private Func<bool> cancellationRequested;
@@ -29,6 +31,7 @@ namespace CdrIndexer
             int newCount = 0;
             int updatedCount = 0;
             int unchangedCount = 0;
+            int errors = 0;
             this.log("Loading CorelDraw...\r\n");
             using (var cdrReader = new CdrReader())
             {
@@ -41,43 +44,62 @@ namespace CdrIndexer
                         break;
                     }
 
-                    string path = file.FullName;
-                    string hash = CalculateHash(path);
-                    Entry entry = LuceneStore.Current.Find(path);
-                    if (entry == null)
+                    try
                     {
-                        this.log("+");
-                        newCount++;
-                        entry = new Entry
+                        IndexFile(ref newCount, ref updatedCount, ref unchangedCount, cdrReader, file);
+                    }
+                    catch (Exception ex)
+                    {
+                        this.log(string.Format("\r\n{0}\r\n", file.FullName));
+                        this.log(ex.ToString() + "\r\n");
+                        errors++;
+                        if (errors == MaxErrors)
                         {
-                            Path = file.FullName.ToLower(),
-                            Name = file.Name,
-                            Hash = hash,
-                            ModifiedOn = file.LastWriteTime,
-                        };
-                        ReadText(path, entry, cdrReader);
-                        LuceneStore.Current.Insert(entry);
+                            this.log("\r\nMax error limit ({0}) reached. Terminating.\r\n");
+                            throw;
+                        }
                     }
-                    else if (entry.Hash != hash)
-                    {
-                        this.log("*");
-                        updatedCount++;
-                        entry.Hash = hash;
-                        ReadText(path, entry, cdrReader);
-                        LuceneStore.Current.Update(entry);
-                    }
-                    else
-                    {
-                        this.log(".");
-                        unchangedCount++;
-                    }
-                    this.onFileIndexed();
                 }
             }
             LuceneStore.Current.ReopenDirectory();
             this.log(string.Format(
                 "\r\nFinished: {0} not changed, {1} updated, {2} new.\r\n",
                 unchangedCount, updatedCount, newCount));
+        }
+
+        private void IndexFile(ref int newCount, ref int updatedCount, ref int unchangedCount, CdrReader cdrReader, FileInfo file)
+        {
+            string path = file.FullName;
+            string hash = CalculateHash(path);
+            Entry entry = LuceneStore.Current.Find(path);
+            if (entry == null)
+            {
+                this.log("+");
+                newCount++;
+                entry = new Entry
+                {
+                    Path = file.FullName.ToLower(),
+                    Name = file.Name,
+                    Hash = hash,
+                    ModifiedOn = file.LastWriteTime,
+                };
+                ReadText(path, entry, cdrReader);
+                LuceneStore.Current.Insert(entry);
+            }
+            else if (entry.Hash != hash)
+            {
+                this.log("*");
+                updatedCount++;
+                entry.Hash = hash;
+                ReadText(path, entry, cdrReader);
+                LuceneStore.Current.Update(entry);
+            }
+            else
+            {
+                this.log(".");
+                unchangedCount++;
+            }
+            this.onFileIndexed();
         }
 
         private void ReadText(string path, Entry entry, CdrReader cdrReader)

@@ -17,8 +17,8 @@ namespace CdrIndexer
         public string ReadText(string path)
         {
             this.text = new StringBuilder();
-            corelDraw.OpenDocument(path, 1);    
-            foreach (CD.Page page in corelDraw.ActiveDocument.Pages)
+            CD.Document doc = corelDraw.OpenDocument(path, 1);
+            foreach (CD.Page page in doc.Pages)
             {
                 ExtractText(page.Shapes.All());
             }
