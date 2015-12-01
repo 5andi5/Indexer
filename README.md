@@ -1,4 +1,4 @@
-# Search Bro
+# Cdr Indexer
 Performs full text search in CorelDRAW documents (*.cdr).
 
 Useful for older cdr file format versions (binary instead of XML archives) which are not supported by Windows search.
@@ -10,5 +10,5 @@ Documents must be indexed at first. Then search can be performed using [Lucene q
 - CorelDRAW X5 (for indexing)
 
 ## Screenshots
-![Indexing](images/indexing.png)
-![Search](images/search.png)
+![Indexing](Images/indexing.png)
+![Search](Images/search.png)
