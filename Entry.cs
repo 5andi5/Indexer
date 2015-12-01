@@ -7,6 +7,7 @@ namespace CdrIndexer
     class Entry
     {
         private static readonly int PreviewMaxLength = 100;
+        private static readonly string DateFormat = "dd.MM.yyyy. H:mm:ss";
 
         public string Hash { get; set; }
         public string Path { get; set; }
@@ -38,7 +39,7 @@ namespace CdrIndexer
         {
             get
             {
-                return this.ModifiedOn.ToString("yyyy.MM.dd HH:mm");
+                return this.ModifiedOn.ToString(DateFormat);
             }
         }
 
@@ -53,7 +54,7 @@ namespace CdrIndexer
             this.Name = doc.Get("Name");
             this.Text = doc.Get("Text");
             this.All = doc.Get("All");
-            this.ModifiedOn = DateTime.Parse(doc.Get("ModifiedOn"));
+            this.ModifiedOn = DateTime.ParseExact(doc.Get("ModifiedOn"), DateFormat, null);
             this.Score = score;
             this.PositionByScore = positionByScore;
         }
@@ -82,7 +83,7 @@ namespace CdrIndexer
                 Field.Store.YES,
                 Field.Index.ANALYZED));
             doc.Add(new Field("ModifiedOn",
-                this.ModifiedOn.ToString(),
+                this.ModifiedOn.ToString("dd.MM.yyyy. h:mm:ss"),
                 Field.Store.YES,
                 Field.Index.NOT_ANALYZED));
 
